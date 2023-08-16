@@ -1,9 +1,15 @@
 import ProductDetailsCarousel from "@/components/ProductDetailsCarousel";
 import RelatedProducts from "@/components/RelatedProducts";
 import Wrapper from "@/components/Wrapper";
-import React from "react";
+import { fetchDAtaFromAPI } from "@/utils/api";
+import { getDiscountedPricePercentage } from "@/utils/helper";
+import React, { useState } from "react";
+import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
-const ProductDetails = () => {
+const ProductDetails = ({ product, products }) => {
+    const p = product?.data[0]?.attributes;
+    const [selectedSize, setSelectedSize] = useState();
+    const [showError, setShowError] = useState(false);
     return (
         <div className="w-full md:py-20">
             <Wrapper>
@@ -11,7 +17,7 @@ const ProductDetails = () => {
                     {/* Left column start */}
 
                     <div className="w-full md:w-auto flex-[1.5] max-w-[500px] lg:max-w-full mx-auto lg:mx-0">
-                        <ProductDetailsCarousel />
+                        <ProductDetailsCarousel images={p?.image?.data} />
                     </div>
 
                     {/* Left column end */}
@@ -21,16 +27,33 @@ const ProductDetails = () => {
                     <div className="flex-[1] py-3">
                         {/* Product title */}
                         <div className="text-[34px] font-semibold mb-2">
-                            Jordan Retro 6 G
+                            {p?.name}
                         </div>
                         {/* Product subtitle */}
                         <div className="text-lg font-semibold mb-5">
-                            Men&apos; s Golf Shoes
+                            {p?.subtitle}
                         </div>
                         {/* Product Price */}
-                        <div className="text-lg font-semibold">
-                            MRP: $300.00
+                        <div className="flex items-center">
+                            <p className="mr-2 text-lg font-semibold">
+                                MRP : &#8377;{p?.price}
+                            </p>
+                            {p?.original_price && (
+                                <>
+                                    <p className="text-base font-medium line-through">
+                                        &#8377;{p?.original_price}
+                                    </p>
+                                    <p className="ml-auto text-base font-medium text-green-500">
+                                        {getDiscountedPricePercentage(
+                                            p?.original_price,
+                                            p?.price
+                                        )}
+                                        % off
+                                    </p>
+                                </>
+                            )}
                         </div>
+
                         <div className="text-md font-medium text-black/[0.5]">
                             incl. of all taxes
                         </div>
@@ -51,34 +74,38 @@ const ProductDetails = () => {
                             </div>
                             {/* heading end */}
                             {/* size selection start */}
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                                    UK 6
-                                </div>
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                                    UK 6
-                                </div>
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                                    UK 6
-                                </div>
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                                    UK 6
-                                </div>
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                                    UK 6
-                                </div>
-                                <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-not-allowed opacity-50">
-                                    UK 6
-                                </div>
-                                <div className=" border rounded-md text-center py-3 font-medium hover:border-black cursor-not-allowed opacity-50">
-                                    UK 6
-                                </div>
+                            <div
+                                className="grid grid-cols-3 gap-2"
+                                id="sizesGrid"
+                            >
+                                {p?.size?.data?.map((item, i) => (
+                                    <div
+                                        key={i}
+                                        className={` border rounded-md text-center py-3 font-medium ${
+                                            item?.enabled
+                                                ? `hover:border-black cursor-pointer`
+                                                : `cursor-not-allowed bg-black/[0.1] opacity-50`
+                                        } ${
+                                            selectedSize === item?.size
+                                                ? "border-black"
+                                                : ""
+                                        }`}
+                                        onClick={() => {
+                                            setSelectedSize(item?.size);
+                                            setShowError(false);
+                                        }}
+                                    >
+                                        {item?.size}
+                                    </div>
+                                ))}
                             </div>
                             {/* size selection end */}
                             {/* show error start */}
-                            <div className="text-red-600 mt-1">
-                                Size selection is required
-                            </div>
+                            {showError && (
+                                <div className="text-red-600 mt-1">
+                                    Size selection is required
+                                </div>
+                            )}
                             {/* show error end */}
                         </div>
                         {/* Product size end */}
@@ -87,6 +114,17 @@ const ProductDetails = () => {
                         <button
                             className="w-full py-4 rounded-full bg-black text-white text-lg font-medium transition-transform
                         active:scale-95 mb-3 hover:opacity-75"
+                            onClick={() => {
+                                if (!selectedSize) {
+                                    setShowError(true);
+                                    document
+                                        .getElementById("sizesGrid")
+                                        .scrollIntoView({
+                                            block: "center",
+                                            behavior: "smooth",
+                                        });
+                                }
+                            }}
                         >
                             Add to Cart
                         </button>
@@ -101,28 +139,51 @@ const ProductDetails = () => {
                             <div className="text-lg font-bold mb-5">
                                 Product Details
                             </div>
-                            <div className="text-md mb-5">
-                                Lorem ipsum dolor sit amet consectetur
-                                adipisicing elit. Necessitatibus perspiciatis
-                                amet cumque veniam? Hic, atque eius dignissimos
-                                vero nostrum nemo exercitationem cupiditate,
-                                explicabo iusto nisi eaque, minima voluptas
-                                incidunt dolor? Aperiam qui quod vel sunt
-                                incidunt fuga totam corrupti nulla, vero magnam
-                                quae debitis accusantium nihil soluta illo
-                                cumque numquam! Necessitatibus sunt a
-                                praesentium distinctio debitis ullam fugiat
-                                magni minus?
+                            <div className="markdown text-md mb-5">
+                                <ReactMarkdown>{p?.description}</ReactMarkdown>
                             </div>
                         </div>
                     </div>
 
                     {/* Right column end */}
                 </div>
-                <RelatedProducts />
+                <RelatedProducts products={products} />
             </Wrapper>
         </div>
     );
 };
 
 export default ProductDetails;
+
+export async function getStaticPaths() {
+    const products = await fetchDAtaFromAPI("/api/products?populate=*");
+
+    const paths = products?.data?.map((p) => {
+        return {
+            params: {
+                slug: p?.attributes?.slug,
+            },
+        };
+    });
+    return {
+        paths,
+        fallback: false,
+    };
+}
+
+export async function getStaticProps({ params: { slug } }) {
+    const product = await fetchDAtaFromAPI(
+        `/api/products?populate=*&filters[slug][$eq]=${slug}`
+    );
+
+    const products = await fetchDAtaFromAPI(
+        `/api/products?populate=*&[filters][slug][$ne]=${slug}`
+    );
+
+    return {
+        props: {
+            product,
+            products,
+        },
+    };
+}
