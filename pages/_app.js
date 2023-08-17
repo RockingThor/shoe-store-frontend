@@ -5,6 +5,9 @@ import Head from "next/head";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+import store from "@/store/store";
+import { Provider } from "react-redux";
+
 export default function App({ Component, pageProps }) {
     return (
         <>
@@ -30,9 +33,11 @@ export default function App({ Component, pageProps }) {
                     rel="stylesheet"
                 />
             </Head>
-            <Header />
-            <Component {...pageProps} />
-            <Footer />
+            <Provider store={store}>
+                <Header />
+                <Component {...pageProps} />
+                <Footer />
+            </Provider>
         </>
     );
 }
