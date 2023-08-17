@@ -68,6 +68,7 @@ const CartItem = ({ data }) => {
                                         <option
                                             key={i}
                                             value={item.size}
+                                            defaultValue={`UK 9`}
                                             disabled={
                                                 !item.enabled ? true : false
                                             }
@@ -96,6 +97,7 @@ const CartItem = ({ data }) => {
                                         <option
                                             key={i}
                                             value={q}
+                                            defaultValue={1}
                                             selected={data.quantity === q}
                                         >
                                             {q}
